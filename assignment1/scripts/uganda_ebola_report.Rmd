@@ -1,0 +1,23 @@
+---
+title: "Uganda Ebola Outbreak Report"
+author: "James Azam & Marijn Hazelbag"
+date: "13/01/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(incidence)
+```
+
+## Report on the ongoing Ebola outbreak in Uganda, 2019/2020
+Here is an incidence curve of the reported cases so far:
+
+```{r echo=FALSE, message=FALSE}
+ebola_dat <- read_csv(file = '../data/ebola_1.csv')
+ebola_inc <- incidence(ebola_dat$onsetDate, groups = ebola_dat$status)
+plot(ebola_inc, xlab = 'Date of onset')
+```
+
