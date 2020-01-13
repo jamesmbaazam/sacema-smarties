@@ -1,0 +1,10 @@
+.Rhistory
+.RData
+*.tar.gz
+*~
+*.swp
+inst/doc
+README.html
+revdep
+.Rproj.user
+.compile_log.rds
