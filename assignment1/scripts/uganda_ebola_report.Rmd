@@ -2,7 +2,7 @@
 title: "Uganda Ebola Outbreak Report"
 author: "James Azam & Marijn Hazelbag"
 date: "13/01/2020"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -11,12 +11,16 @@ library(readr)
 library(dplyr)
 library(incidence)
 ```
-
-## Report on the ongoing Ebola outbreak in Uganda, 2019/2020
-Here is an incidence curve of the reported cases so far:
-
 ```{r echo=FALSE, message=FALSE}
-ebola_dat <- read_csv(file = '../data/ebola_1.csv')
+ebola_dat <- read_csv(file = '../data/ebola_1.csv') %>% 
+    arrange(reportDate)
+```
+## Report on the ongoing Ebola outbreak in Uganda, 2019/2020
+The first Ebola virus disease (EVD) case was reported in Uganda on `r unclass(select(ebola_dat, reportDate)[1, ])$reportDate`. As of `r unclass(select(ebola_dat, reportDate)[nrow(ebola_dat), ])$reportDate`, there have been `r sum(table(ebola_dat$status))` reported cases in `r length(unique(ebola_dat$householdID))` unique households. Out of the total cases, `r as.numeric(table(ebola_dat$status)['confirmed'])` are confirmed, `r as.numeric(table(ebola_dat$status)['probable'])` probable, and `r as.numeric(table(ebola_dat$status)['suspected'])` suspected. The average number 
+of cases per households reporting cases is `r mean(table(ebola_dat$householdID))`. 
+
+The incidence curve below summarises the reported information.
+```{r echo=FALSE, message=FALSE}
 ebola_inc <- incidence(ebola_dat$onsetDate, groups = ebola_dat$status)
 plot(ebola_inc, xlab = 'Date of onset')
 ```
