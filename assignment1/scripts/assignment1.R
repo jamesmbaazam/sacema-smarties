@@ -6,8 +6,9 @@ library(incidence)
 
 set_here()
 ebola_dat <- read_csv(file = './assignment1/data/ebola_1.csv')
+ebola_dat_update <- read_csv(file = './assignment1/data/ebola_1_update.csv')
 
-View(ebola_dat)
+View(ebola_dat_update)
 
 ebola_inc <- incidence(ebola_dat$onsetDate, groups = ebola_dat$status)
 plot(ebola_inc, xlab = 'Date of onset')
