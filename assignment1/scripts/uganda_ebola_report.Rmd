@@ -1,23 +1,69 @@
 ---
-title: "Uganda Ebola Outbreak Report"
-author: "James Azam & Marijn Hazelbag"
-date: "13/01/2020"
-output: pdf_document
+title: "Situation Report: Uganda Ebola Virus Disease Outbreak"
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(dplyr)
+library(ggplot2)
 library(incidence)
 ```
-
-## Report on the ongoing Ebola outbreak in Uganda, 2019/2020
-Here is an incidence curve of the reported cases so far:
-
 ```{r echo=FALSE, message=FALSE}
-ebola_dat <- read_csv(file = '../data/ebola_1.csv')
+ebola_dat <- read_csv(file = '../data/ebola_1_update.csv') %>% 
+    arrange(reportDate)
+
+ebola_dat_outbreak1 <- ebola_dat %>% filter(reportDate < reportDate[3])
+ebola_dat_outbreak2 <- ebola_dat %>% filter(reportDate > reportDate[2])
+
+```
+```{r echo=FALSE, message=FALSE}
+
+## overall calculations for report
+first_reporting_date <- pull(ebola_dat, reportDate)[1]
+last_reporting_date <- pull(ebola_dat, reportDate)[nrow(ebola_dat)]
+total_confirmed <- as.numeric(table(ebola_dat$status)['confirmed'])
+total_probable <- as.numeric(table(ebola_dat$status)['probable'])
+total_deaths <- sum(!is.na(ebola_dat$deathDate))
+
+#cases by sex
+case_status_by_sex <- ebola_dat_outbreak2 %>% 
+    group_by(status, sex) %>% 
+    count()
+
+##outbreak 1
+total_confirmed_outbreak1 <- as.numeric(table(ebola_dat_outbreak1$status)['confirmed'])
+total_probable_outbreak1  <- as.numeric(table(ebola_dat_outbreak1$status)['probable'])
+total_suspected_outbreak1  <- as.numeric(table(ebola_dat_outbreak1$status)['suspected'])
+
+##outbreak 2
+total_confirmed_outbreak2 <- as.numeric(table(ebola_dat_outbreak2$status)['confirmed'])
+total_probable_outbreak2  <- as.numeric(table(ebola_dat_outbreak2$status)['probable'])
+total_suspected_outbreak2  <- as.numeric(table(ebola_dat_outbreak2$status)['suspected'])
+n_deaths_outbreak2 <- sum(!is.na(ebola_dat_outbreak2$deathDate))
+
+
+## create the incidence object from the data
 ebola_inc <- incidence(ebola_dat$onsetDate, groups = ebola_dat$status)
+```
+## External Situation Report 01: `r format(Sys.Date(),' %d-%m-%Y')`
+<!-- The first Ebola virus disease (EVD) case was reported `r ebola_inc$timespan` days ago on `r first_reporting_date`.  -->
+
+- From `r ebola_dat_outbreak1$reportDate[1]` to `r ebola_dat_outbreak1$reportDate[2]`, one probable and confirmed case were reported in Uganda but this outbreak did not take off.
+- No deaths were reported from the outbreak during January, 2019.
+- On `r ebola_dat_outbreak2$reportDate[3]`, a second outbreak was reported, and `r total_confirmed_outbreak2` total confirmed cases have been reported.
+- `r n_deaths_outbreak2` number of deaths have been reported so far. 
+ - As of `r last_reporting_date`, a total of `r nrow(ebola_dat)` EVD cases, including `r total_confirmed` confirmed and `r total_probable` probable cases have been reported in Uganda. Out of the total confirmed and probable cases, there have been `r total_deaths` deaths. Of the total confirmed and probable cases, <state number of cases which are male and female>.
+
+Below is an incidence curve by disease status of all the reported cases.
+```{r echo=FALSE, message=FALSE}
 plot(ebola_inc, xlab = 'Date of onset')
 ```
+
+<!-- ## Additional data required -->
+<!-- Like many other infectious diseases, Ebola virus disease (EVD) is spread by direct contact and over a spatial landscape. Hence, it will be useful for us to have GIS locations of households to ascertain social interactions and transmission chains. We will require demographic information(gender, age) for estimating metrics like the age-specific case-fatality ratios. These metrics are useful for recommending targetted interventions concerning age and sex, and to infer possible interactions. Additionally, we require information on hospitalisation (i.e. the date of hospitalisation, hospital name, and location). -->
+
 
