@@ -14,7 +14,8 @@ library(incidence)
 ```
 ```{r echo=FALSE, message=FALSE}
 ebola_dat <- read_csv(file = '../data/ebola_1_update.csv') %>% 
-    arrange(reportDate)
+    arrange(reportDate) %>% 
+  mutate(reportDelay = reportDate - onsetDate) 
 
 ebola_dat_outbreak1 <- ebola_dat %>% filter(reportDate < reportDate[3])
 ebola_dat_outbreak2 <- ebola_dat %>% filter(reportDate > reportDate[2])
@@ -30,9 +31,11 @@ total_probable <- as.numeric(table(ebola_dat$status)['probable'])
 total_deaths <- sum(!is.na(ebola_dat$deathDate))
 
 #cases by sex
-case_status_by_sex <- ebola_dat_outbreak2 %>% 
+
+case_status_by_sex <- ebola_dat %>% 
+    filter(status == 'confirmed') %>% 
     group_by(status, sex) %>% 
-    count()
+    count() 
 
 ##outbreak 1
 total_confirmed_outbreak1 <- as.numeric(table(ebola_dat_outbreak1$status)['confirmed'])
@@ -46,6 +49,18 @@ total_suspected_outbreak2  <- as.numeric(table(ebola_dat_outbreak2$status)['susp
 n_deaths_outbreak2 <- sum(!is.na(ebola_dat_outbreak2$deathDate))
 
 
+#case fatality ratio
+#reportDelay_mean <- mean(ebola_dat_update$reportDelay)
+
+fatality_confirmed_cases <- ebola_dat %>% 
+    filter(status == 'confirmed') %>% 
+    tidyr::drop_na(deathDate) %>% 
+    nrow()
+
+cfr <- binom.test(fatality_confirmed_cases, total_confirmed, conf.level = .95) %>% 
+    broom::tidy(cfr) %>% 
+    select(conf.low, estimate, conf.high)
+
 ## create the incidence object from the data
 ebola_inc <- incidence(ebola_dat$onsetDate, groups = ebola_dat$status)
 ```
@@ -56,8 +71,13 @@ ebola_inc <- incidence(ebola_dat$onsetDate, groups = ebola_dat$status)
 - No deaths were reported from the outbreak during January, 2019.
 - On `r ebola_dat_outbreak2$reportDate[3]`, a second outbreak was reported, and `r total_confirmed_outbreak2` total confirmed cases have been reported.
 - `r n_deaths_outbreak2` number of deaths have been reported so far. 
- - As of `r last_reporting_date`, a total of `r nrow(ebola_dat)` EVD cases, including `r total_confirmed` confirmed and `r total_probable` probable cases have been reported in Uganda. Out of the total confirmed and probable cases, there have been `r total_deaths` deaths. Of the total confirmed and probable cases, <state number of cases which are male and female>.
+ - As of `r last_reporting_date`, a total of `r nrow(ebola_dat)` EVD cases, including `r total_confirmed` confirmed and `r total_probable` probable cases have been reported in Uganda. 
+ - Of the total confirmed cases, there have been `r fatality_confirmed_cases` deaths, with a case-fatality ratio of `r round(cfr$estimate*100, 1)`% (95% CI, `r round(cfr$conf.low *100, 1)`% to `r round(cfr$conf.high *100, 1)`%). 
+- We suspect the case-fatality ratio is an underestimate of the actual value because we found a mean reporting delay of `r round(mean(ebola_dat$reportDelay))` days.
+- Of the total confirmed, `r case_status_by_sex[1, 3]` are female and `r case_status_by_sex[2, 3]` are male.
 
+- We have fitted a simple model to the reported data and it appears that we the peak of the outbreak has been reached and the outbreak is stable. A subgroup analysis suggests that there appears to be a decreasing trend in the number of cases in males and an increase in female cases. 
+ 
 Below is an incidence curve by disease status of all the reported cases.
 ```{r echo=FALSE, message=FALSE}
 plot(ebola_inc, xlab = 'Date of onset')
