@@ -3,6 +3,8 @@ library(dplyr)
 library(ggplot2)
 library(here)
 library(incidence)
+require(caTools)
+
 
 set_here()
 ebola_dat <- read_csv(file = './assignment1/data/ebola_1.csv')
@@ -27,9 +29,12 @@ View(eb_only_latest)
 ebola_inc2 <- incidence(eb_only_latest$onsetDate, interval=7)
 View(ebola_inc2)
 ebola_inc2$counts
+plot(ebola_inc2)
+
 
 f1 <- fit(ebola_inc2)
 
+plot(ebola_inc2, fit= f1)
 plot(f1)
 
 ebola_inc2$counts
@@ -41,3 +46,18 @@ plot(f2)
 
 ##
 f3 <- fit(ebola_inc2)
+
+
+### check where the optimal split lies
+
+best.fit <- fit_optim_split(ebola_inc2)
+
+### split at optimal split data
+fit.both <- fit(ebola_inc2, split=as.Date("2019-11-11"))
+plot(ebola_inc2, fit= fit.both)
+
+
+sex.incidence <- incidence(eb_only_latest$onsetDate, interval=7, groups = eb_only_latest$sex)
+fit.sex <- fit(sex.incidence)
+
+plot(sex.incidence, fit= fit.sex)
